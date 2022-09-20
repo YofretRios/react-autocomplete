@@ -7,7 +7,7 @@ type Movie = {
   year: number;
 };
 
-const ArrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+const NavKeys = ['ArrowUp', 'ArrowDown', 'Enter'];
 
 const films: Array<Movie> = [
   { id: 1, label: 'The Shawshank Redemption', year: 1994 },
@@ -24,27 +24,49 @@ function AutoComplete() {
   const [search, setSearch] = useState('');
   const [options, setOptions] = useState<Array<Movie>>([]);
   const [suggestions, setSuggestion] = useState<Array<Movie>>([]);
+  const [focused, setFocused] = useState(0);
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
-  };
 
-  const onKeyUp = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    console.log('key up my friend', search, event.key, ArrowKeys.includes(event.key));
+    if (event.target.value === '') {
+      setSuggestion([]);
 
-    if (ArrowKeys.includes(event.key)) {
       return;
     }
 
-    const filtered = options.filter((movie) => {
-      return movie.label.toLowerCase().indexOf(search.toLowerCase()) > -1;
-    });
-
-    console.log(filtered);
-
     startTransition(() => {
+      const filtered = options.filter((movie) => {
+        return (
+          movie.label.toLowerCase().indexOf(event.target.value.toLowerCase()) >
+          -1
+        );
+      });
+
       setSuggestion(filtered);
     });
+  };
+
+  const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (NavKeys.includes(event.key)) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (event.key === 'Enter' && suggestions.length > 0) {
+        setSearch(suggestions[focused].label);
+        setSuggestion([]);
+
+        return
+      }
+
+      const next = focused + (event.key === 'ArrowDown' ? 1 : -1);
+
+      if (next < 0 || next >= suggestions.length) {
+        return;
+      }
+
+      setFocused(next);
+    }
   };
 
   useEffect(() => {
@@ -57,13 +79,15 @@ function AutoComplete() {
         className={styles.input}
         value={search}
         onChange={onInputChange}
-        onKeyUp={onKeyUp}
+        onKeyDown={onKeyDown}
         placeholder="Search your favorite movie"
       />
       <ul className={styles.suggestions}>
-        {suggestions.map((suggestion) => {
+        {suggestions.map((suggestion, index) => {
+          const focusedClass = index === focused ? styles.focused : '';
+
           return (
-            <li key={suggestion.id} tabIndex={0}>
+            <li key={suggestion.id} className={focusedClass}>
               {suggestion.label}
             </li>
           );

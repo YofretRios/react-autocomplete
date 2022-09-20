@@ -16,6 +16,14 @@
   border: 1px solid #e5e7eb;
 }
 
+.noResults {
+  font-size: .9em;
+  margin: 0 auto;
+  padding: 36px 0;
+  text-align: center;
+  width: 80%;
+}
+
 .suggestions {
   list-style: none;
   margin: 8px 0 0;
@@ -28,4 +36,8 @@
   margin-bottom: 4px;
   background-color: white;
   box-shadow: 0 1px 3px 0 #d4d9e1
+}
+
+.suggestions li.focused {
+  background-color: #DCDCDC;
 }
