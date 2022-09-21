@@ -81,7 +81,7 @@ function useSuggestions({ status }: { status: string }) {
       });
   }, []);
 
-  return { run, state };
+  return { run, state, dispatch };
 }
 
 export default useSuggestions;

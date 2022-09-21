@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import useSuggestions from '../../hooks/useSuggestions';
 import { getCountrySuggestions } from '../../api';
-import { Country } from '../../types';
+import { Country, CountryTypes } from '../../types';
 import isVisible from '../../utils/isVisible';
 import debounce from '../../utils/debounce';
 import highlightKeyWord from '../../utils/highlightKeyword';
@@ -19,9 +19,11 @@ function AutoComplete({ onChange, search }: AutoCompleteProps) {
   const {
     state: { suggestions },
     run,
+    dispatch
   } = useSuggestions({ status: 'idle' });
   const suggestionContainer = useRef<HTMLUListElement>(null);
   const [focused, setFocused] = useState(0);
+  const [display, setDisplay] = useState(false);
 
   const debounceRun = useMemo(
     () =>
@@ -33,11 +35,16 @@ function AutoComplete({ onChange, search }: AutoCompleteProps) {
   );
 
   useEffect(() => {
-    debounceRun(search);
-  }, [search, debounceRun]);
+    if (display) {
+      debounceRun(search);
+    }
+  }, [search, display, debounceRun]);
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onChange(event.target.value);
+    if (!display) {
+      setDisplay(true);
+    }
   };
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -76,6 +83,8 @@ function AutoComplete({ onChange, search }: AutoCompleteProps) {
 
   const selectOption = (country: Country) => {
     onChange(country.common);
+    dispatch({ type: CountryTypes.resolved, payload: [country] })
+    setDisplay(false);
   };
 
   return (
