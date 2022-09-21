@@ -1,50 +1,27 @@
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import useSuggestions from '../hooks/useAsync';
+import { getCountrySuggestions } from '../api';
 import styles from './autoComplete.module.css';
-
-type Movie = {
-  id: number;
-  label: string;
-  year: number;
-};
+import { Country } from '../types';
 
 const NavKeys = ['ArrowUp', 'ArrowDown', 'Enter'];
 
-const films: Array<Movie> = [
-  { id: 1, label: 'The Shawshank Redemption', year: 1994 },
-  { id: 2, label: 'The Godfather', year: 1972 },
-  { id: 3, label: 'The Godfather: Part II', year: 1974 },
-  { id: 4, label: 'The Dark Knight', year: 2008 },
-  { id: 5, label: '12 Angry Men', year: 1957 },
-  { id: 6, label: "Schindler's List", year: 1993 },
-  { id: 7, label: 'Pulp Fiction', year: 1994 },
-];
-
 function AutoComplete() {
-  const [, startTransition] = useTransition();
+  const { state: { suggestions }, run } = useSuggestions({ status: 'idle' });
+  const suggestionContainer = useRef<HTMLUListElement>(null);
   const [search, setSearch] = useState('');
-  const [options, setOptions] = useState<Array<Movie>>([]);
-  const [suggestions, setSuggestion] = useState<Array<Movie>>([]);
   const [focused, setFocused] = useState(0);
+
+  useEffect(() => {
+    if (search !== '') {
+      const promise = getCountrySuggestions(search);
+
+      run(promise)
+    }
+  }, [search, run]);
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
-
-    if (event.target.value === '') {
-      setSuggestion([]);
-
-      return;
-    }
-
-    startTransition(() => {
-      const filtered = options.filter((movie) => {
-        return (
-          movie.label.toLowerCase().indexOf(event.target.value.toLowerCase()) >
-          -1
-        );
-      });
-
-      setSuggestion(filtered);
-    });
   };
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -53,10 +30,9 @@ function AutoComplete() {
       event.stopPropagation();
 
       if (event.key === 'Enter' && suggestions.length > 0) {
-        setSearch(suggestions[focused].label);
-        setSuggestion([]);
+        selectOption(suggestions[focused]);
 
-        return
+        return;
       }
 
       const next = focused + (event.key === 'ArrowDown' ? 1 : -1);
@@ -65,13 +41,31 @@ function AutoComplete() {
         return;
       }
 
+      if (suggestionContainer.current) {
+        const liElement = suggestionContainer.current.childNodes[next] as HTMLLIElement
+        liElement.scrollIntoView(false)
+      }
+
       setFocused(next);
     }
   };
 
-  useEffect(() => {
-    setOptions(films);
-  }, []);
+  const onMouseEnter = (index: number) => () => {
+    setFocused(index);
+  };
+
+  const selectOption = (country: Country) => {
+    setSearch(country.common);
+  };
+
+  const highlighKeyWord = (common: string, official: string) => {
+    const pattern = new RegExp(search, 'igm');
+    const compose = `${common} / ${official}`
+
+    let replaced = compose.replace(pattern, (match) => `<mark>${match}</mark>`);
+
+    return { __html: replaced };
+  };
 
   return (
     <div className={styles.container}>
@@ -82,14 +76,18 @@ function AutoComplete() {
         onKeyDown={onKeyDown}
         placeholder="Search your favorite movie"
       />
-      <ul className={styles.suggestions}>
+      <ul ref={suggestionContainer} className={styles.suggestions}>
         {suggestions.map((suggestion, index) => {
           const focusedClass = index === focused ? styles.focused : '';
 
           return (
-            <li key={suggestion.id} className={focusedClass}>
-              {suggestion.label}
-            </li>
+            <li
+              key={suggestion.ccn3}
+              className={focusedClass}
+              onClick={() => selectOption(suggestion)}
+              onMouseEnter={onMouseEnter(index)}
+              dangerouslySetInnerHTML={highlighKeyWord(suggestion.common, suggestion.official)}
+            />
           );
         })}
       </ul>
