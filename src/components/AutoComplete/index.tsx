@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import useSuggestions from '../../hooks/useSuggestions';
 import { getCountrySuggestions } from '../../api';
-import styles from './autoComplete.module.css';
 import { Country } from '../../types';
 import isVisible from '../../utils/isVisible';
 import debounce from '../../utils/debounce';
 import highlightKeyWord from '../../utils/highlightKeyword';
 import HelpKeys from '../HelpKeys';
+import styles from './autoComplete.module.css';
 
 const NavKeys = ['ArrowUp', 'ArrowDown', 'Enter'];
 
