@@ -6,6 +6,7 @@ import { Country } from '../../types';
 import isVisible from '../../utils/isVisible';
 import debounce from '../../utils/debounce';
 import highlightKeyWord from '../../utils/highlightKeyword';
+import HelpKeys from '../HelpKeys';
 
 const NavKeys = ['ArrowUp', 'ArrowDown', 'Enter'];
 
@@ -101,7 +102,9 @@ function AutoComplete({ onChange, search }: AutoCompleteProps) {
             />
           );
         })}
+        {suggestions.length === 0 && <div className={styles.noResults}>No results</div>}
       </ul>
+      <HelpKeys />
     </div>
   );
 }

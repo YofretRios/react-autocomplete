@@ -47,6 +47,11 @@ function reducer(state: CountryState, action: CountryAction): CountryState {
   }
 }
 
+/**
+ * useSuggestions Custom to handle the api state call within a reducer, and the api promise
+ * @param param.status Initial status
+ * @returns returns an object containing the custom promise, and the current state
+ */
 function useSuggestions({ status }: { status: string }) {
   const [state, dispatch] = useReducer(reducer, {
     status,
@@ -76,7 +81,7 @@ function useSuggestions({ status }: { status: string }) {
       });
   }, []);
 
-  return { run, state, dispatch };
+  return { run, state };
 }
 
 export default useSuggestions;
