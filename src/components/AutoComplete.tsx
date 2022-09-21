@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import useSuggestions from '../hooks/useAsync';
 import { getCountrySuggestions } from '../api';
 import styles from './autoComplete.module.css';
 import { Country } from '../types';
+import isVisible from '../utils/isVisible';
+import debounce from '../utils/debounce';
 
 const NavKeys = ['ArrowUp', 'ArrowDown', 'Enter'];
 
@@ -12,13 +14,17 @@ function AutoComplete() {
   const [search, setSearch] = useState('');
   const [focused, setFocused] = useState(0);
 
+  const debounceRun = useMemo(() => debounce((search: string) => {
+    const promise = getCountrySuggestions(search);
+
+    run(promise)
+  }, 150), [run]);
+
   useEffect(() => {
     if (search !== '') {
-      const promise = getCountrySuggestions(search);
-
-      run(promise)
+      debounceRun(search)
     }
-  }, [search, run]);
+  }, [search, debounceRun]);
 
   const onInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -43,7 +49,9 @@ function AutoComplete() {
 
       if (suggestionContainer.current) {
         const liElement = suggestionContainer.current.childNodes[next] as HTMLLIElement
-        liElement.scrollIntoView(false)
+        if (!isVisible(liElement, suggestionContainer.current)) {
+          liElement.scrollIntoView(false)
+        }
       }
 
       setFocused(next);

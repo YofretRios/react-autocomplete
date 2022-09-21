@@ -30,7 +30,7 @@ function reducer(state: CountryState, action: CountryAction): CountryState {
     case CountryTypes.rejected:
       return {
         status: CountryTypes.rejected,
-        suggestions: state.suggestions,
+        suggestions: [],
         error: action.payload,
       };
     case CountryTypes.idle:
