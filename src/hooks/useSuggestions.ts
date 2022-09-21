@@ -21,7 +21,6 @@ function reducer(state: CountryState, action: CountryAction): CountryState {
         error: null,
       };
     case CountryTypes.resolved:
-      console.log(action);
       return {
         status: CountryTypes.resolved,
         suggestions: action.payload,
@@ -73,7 +72,6 @@ function useSuggestions({ status }: { status: string }) {
         });
       })
       .catch((error: any) => {
-        console.log(error);
         dispatch({ type: CountryTypes.rejected, payload: error });
       });
   }, []);
